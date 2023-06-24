@@ -15,7 +15,7 @@ In the `project_01/` folder you can find... _[Through the analysis of the "Motor
 **Sample data visualization:** 
 
 _[Motor Vehicle collisions Rate by Month and Year]_
-<img src="C:/github/dataviz_final_project/figures/unnamed-chunk-6-1.png">
+<img src=unnamed-chunk-6-1.png>
 
 
 ## Project 02
