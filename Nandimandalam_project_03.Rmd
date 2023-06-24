@@ -1,0 +1,323 @@
+---
+title: "Data Visualization for Exploratory Data Analysis"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+# Data Visualization Project 03
+
+
+In this exercise you will explore methods to create different types of data visualizations (such as plotting text data, or exploring the distributions of continuous variables).
+
+
+## PART 1: Density Plots
+
+Using the dataset obtained from FSU's [Florida Climate Center](https://climatecenter.fsu.edu/climate-data-access-tools/downloadable-data), for a station at Tampa International Airport (TPA) for 2022, attempt to recreate the charts shown below which were generated using data from 2016. You can read the 2022 dataset using the code below: 
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+weather_tpa <- read_csv("https://raw.githubusercontent.com/reisanar/datasets/master/tpa_weather_2022.csv")
+# random sample 
+sample_n(weather_tpa, 4)
+```
+
+See https://www.reisanar.com/slides/relationships-models#10 for a reminder on how to use this type of dataset with the `lubridate` package for dates and times (example included in the slides uses data from 2016).
+
+Using the 2022 data: 
+
+(a) Create a plot like the one below:
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/tpa_max_temps_facet.png")
+```
+
+Hint: the option `binwidth = 3` was used with the `geom_histogram()` function.
+
+```{r}
+library(lubridate)
+
+cleaned_tpa <- weather_tpa %>% 
+  unite("doy", year, month, day, sep = "-") %>% 
+  mutate(doy = ymd(doy), 
+         max_temp = as.double(max_temp), 
+         min_temp = as.double(min_temp), 
+         precipitation = as.double(precipitation))
+
+ cleaned_tpa <- cleaned_tpa %>%
+  mutate(month_name = month(doy, label = TRUE, abbr = FALSE))
+ cleaned_tpa
+```
+
+```{r}
+# Create histograms with month names as facet titles and specified binwidth
+ggplot(cleaned_tpa, aes(x = max_temp, fill = month_name)) +
+  geom_histogram(binwidth = 3, alpha = 0.6) +
+  facet_wrap(~ month_name, ncol = 4) +
+  xlab("Maximum Temperature") +
+  ylab("Number of Days") +
+  guides(fill = FALSE) +
+  theme_minimal() +
+  theme(strip.text = element_text(face = "bold", size = 12),
+        strip.background = element_rect(color = "black", fill = "white", linetype = "solid"),
+        panel.border = element_rect(color = "black", fill = NA,size = 1))
+```
+
+- The histograms effectively display the distribution of maximum temperatures for each month. Each histogram is presented as a facet, with the month names serving as titles for the individual facets. This arrangement allows for easy comparison of temperature distributions across different months.
+- The informative set of histograms that effectively visualize the distribution of maximum temperatures at Tampa International Airport for each month. The use of facets, customization of text and background elements, and appropriate labeling contribute to the clarity and comprehensibility of the plot.
+
+(b) Create a plot like the one below:
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/tpa_max_temps_density.png")
+```
+
+Hint: check the `kernel` parameter of the `geom_density()` function, and use `bw = 0.5`.
+
+```{r}
+ggplot(cleaned_tpa, aes(x = max_temp, fill = "Density")) +
+  geom_density(kernel = "gaussian", bw = 0.5, color = "black") +
+  xlab("Maximum Temperature") +
+  ylab("Density") +
+  ggtitle("Density Plot of Maximum Temperature") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+The density plot effectively visualizes the distribution of maximum temperatures. The y-axis represents the density of temperature values, while the x-axis displays the range of maximum temperatures. The density is estimated using a Gaussian kernel with a bandwidth of 0.5, which determines the smoothness of the density curve.The x-axis label, "Maximum Temperature," and y-axis label, "Density," provide clear descriptions of the variables being depicted in the plot.The plot is given a title, "Density Plot of Maximum Temperature," which conveys the main purpose of the visualization.
+It is a simple and informative density plot that effectively visualizes the distribution of maximum temperatures at Tampa International Airport. The focus on the density estimation and the absence of unnecessary elements contribute to the clarity and effectiveness of the plot.
+
+
+(c) Create a plot like the one below:
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/tpa_max_temps_density_facet.png")
+```
+
+Hint: default options for `geom_density()` were used. 
+
+```{r}
+ggplot(cleaned_tpa, aes(x = max_temp, fill = month_name)) +
+  geom_density(color = "black") +
+  facet_wrap(~ month_name, ncol = 4) +
+  xlab("Maximum Temperature") +
+  ylab("Density") +
+  ggtitle("Density Plots of Maximum Temperature by Month") +
+  scale_fill_manual(values = rainbow(12)) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(strip.text = element_text(face = "bold", size = 12),
+        strip.background = element_rect(color = "black", fill = "white", linetype = "solid"),
+        panel.border = element_rect(color = "black", fill = NA,size = 1))
+
+```
+
+The density plots effectively visualize the distribution of maximum temperatures for each month. Each density plot is presented as a facet, with the month names serving as titles for the individual facets. This arrangement allows for easy comparison of temperature distributions across different months.The x-axis label, "Maximum Temperature," and y-axis label, "Density," provide clear descriptions of the variables being depicted in the plot.The plot is given a title, "Density Plots of Maximum Temperature by Month," which conveys the main purpose of the visualization.
+It is a visually appealing and informative set of density plots that effectively visualize the distribution of maximum temperatures at Tampa International Airport for each month. The use of facets, color customization, appropriate labeling, and styling contribute to the clarity and comprehensibility of the plot.
+
+(d) Generate a plot like the chart below:
+
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/tpa_max_temps_ridges_plasma.png")
+```
+
+Hint: use the`{ggridges}` package, and the `geom_density_ridges()` function paying close attention to the `quantile_lines` and `quantiles` parameters. The plot above uses the `plasma` option (color scale) for the _viridis_ palette.
+
+```{r}
+library(ggridges)
+
+# Create the plot
+ggplot(cleaned_tpa, aes(x = max_temp, y = month_name, fill = ..density..)) +
+  geom_density_ridges_gradient(scale = 3, quantile_lines = TRUE, quantiles = c(0.5), color = "black", gradient_lwd = 0.8) +
+  scale_fill_viridis_c(option = "plasma", na.value = "transparent") +
+  labs(x = "Maximum Temperature (\u00b0F)", y = "Month", fill = "Density") +
+  ggtitle("Density Distribution of Maximum Temperatures\nin Tampa International Airport (2022)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  coord_cartesian(clip = "off")
+```
+
+- The plot effectively visualizes the density distribution of maximum temperatures across the months of the year. Each ridge represents a month, and the color intensity within the ridges represents the density of temperature values. The darker the color, the higher the density of temperatures in that particular range.
+- It is a well-designed and informative plot that effectively communicates the density distribution of maximum temperatures at Tampa International Airport in 2022.
+
+
+(e) Create a plot of your choice that uses the attribute for precipitation _(values of -99.9 for temperature or -99.99 for precipitation represent missing data)_.
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+# Convert year, month, and day columns to a single date column
+weather_tpa <- weather_tpa %>%
+  mutate(date = make_date(year, month, day))
+
+# Filter out missing precipitation data (-99.99)
+weather_tpa_filtered <- weather_tpa %>%
+  filter(precipitation != -99.99)
+
+# Create the plot using geom_point
+ggplot(weather_tpa_filtered, aes(x = date, y = precipitation, color = precipitation)) +
+  geom_point(size = 3) +
+  labs(x = "Date", y = "Precipitation", title = "Precipitation in Tampa International Airport (2022)") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_minimal()
+
+```
+
+The plot is created using geom_point, where the x-axis represents the date, and the y-axis represents the precipitation values. The color of each point is determined by the precipitation value, using a color gradient ranging from blue (low values) to red (high values). The labs function sets the axis labels and the plot title, while theme_minimal sets a minimalistic theme for the plot.
+Then, It will generate a plot showing the precipitation values over time for the year 2022 at Tampa International Airport, excluding the missing data points.
+
+## PART 2 
+
+> **You can choose to work on either Option (A) or Option (B)**. Remove from this template the option you decided not to work on. 
+
+
+
+### Option (B): Data on Concrete Strength 
+
+Concrete is the most important material in **civil engineering**. The concrete compressive strength is a highly nonlinear function of _age_ and _ingredients_. The dataset used here is from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/index.php), and it contains 1030 observations with 9 different attributes 9 (8 quantitative input variables, and 1 quantitative output variable). A data dictionary is included below: 
+
+
+Variable                      |    Notes                
+------------------------------|-------------------------------------------
+Cement                        | kg in a $m^3$ mixture             
+Blast Furnace Slag            | kg in a $m^3$ mixture  
+Fly Ash                       | kg in a $m^3$ mixture             
+Water                         | kg in a $m^3$ mixture              
+Superplasticizer              | kg in a $m^3$ mixture
+Coarse Aggregate              | kg in a $m^3$ mixture
+Fine Aggregate                | kg in a $m^3$ mixture      
+Age                           | in days                                             
+Concrete compressive strength | MPa, megapascals
+
+
+Below we read the `.csv` file using `readr::read_csv()` (the `readr` package is part of the `tidyverse`)
+
+```{r}
+concrete <- read_csv("C:/github/dataviz_final_project/data/concrete.csv", col_types = cols())
+concrete
+```
+
+
+Let us create a new attribute for visualization purposes, `strength_range`: 
+
+```{r}
+new_concrete <- concrete %>%
+  mutate(strength_range = cut(Concrete_compressive_strength, 
+                              breaks = quantile(Concrete_compressive_strength, 
+                                                probs = seq(0, 1, 0.2))) )
+new_concrete
+
+```
+
+
+
+1. Explore the distribution of 2 of the continuous variables available in the dataset. Do ranges make sense? Comment on your findings.
+
+
+```{r}
+library(ggplot2)
+
+# Density plot for Cement
+ggplot(new_concrete, aes(x = Cement)) +
+  geom_density(fill = "blue", alpha = 0.5) +
+  labs(title = "Density Plot - Cement", x = "Cement (kg/m^3)", y = "Density")
+
+# Density plot for Water
+ggplot(new_concrete, aes(x = Water)) +
+  geom_density(fill = "green", alpha = 0.5) +
+  labs(title = "Density Plot - Water", x = "Water (kg/m^3)", y = "Density")
+
+```
+
+Based on the density plots, we can make observations about the ranges of these variables:
+
+- Cement: The density plot for Cement indicates that the majority of observations lie between approximately 100 kg/m^3 and 600 kg/m^3. There is a peak around 250-350 kg/m^3, suggesting that this range contains a significant concentration of data points.
+
+- Water: The density plot for Water shows that the data is concentrated between around 100 kg/m^3 and 250 kg/m^3. There is a prominent peak around 150-200 kg/m^3, indicating a higher frequency of observations within this range.
+These observations provide an understanding of the distribution and ranges of the variables "Cement" and "Water" in the dataset.
+
+
+
+2. Use a _temporal_ indicator such as the one available in the variable `Age` (measured in days). Generate a plot similar to the one shown below. Comment on your results.
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/concrete_strength.png")
+```
+
+
+```{r}
+library(ggplot2)
+
+# Remove missing values from Age and strength_range variables
+filtered_concrete <- new_concrete[!is.na(new_concrete$Age) & !is.na(new_concrete$strength_range), ]
+
+# Specify the order of Age levels
+age_order <- c(1, 3, 7, 14, 28, 56, 90, 91, 100, 120, 180, 270, 360, 365)
+
+# Create the box plot
+ggplot(filtered_concrete, aes(x = factor(Age, levels = age_order), y = Concrete_compressive_strength, fill = strength_range)) +
+  geom_boxplot() +
+  labs(title = "Concrete Strength by Age", x = "Age (days)", y = "Concrete Compressive Strength (MPa)") +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal()
+
+```
+
+- The box plot provides a visual representation of how the concrete compressive strength varies with different ages.
+- The vertical axis represents the concrete compressive strength measured in megapascals (MPa).
+- Each box in the plot represents the interquartile range (IQR) of the strength values for a particular age.
+- The median strength value for each age is represented by the horizontal line within each box.
+- The whiskers extending from the boxes show the range of the strength values within 1.5 times the IQR.
+- Outliers are represented by individual points outside the whiskers.
+
+From the box plot, we can observe the following:
+
+- Concrete compressive strength tends to increase as the age of the concrete increases.
+- The spread of strength values, as indicated by the width of the boxes, generally decreases with increasing age.
+- For each age, there are variations in the strength values, represented by the length of the whiskers and the presence of outliers.
+Overall, the box plot provides insights into the relationship between concrete strength and age, allowing us to understand the distribution and trends in concrete compressive strength over time.
+
+
+
+3. Create a scatterplot similar to the one shown below. Pay special attention to which variables are being mapped to specific aesthetics of the plot. Comment on your results. 
+
+```{r, echo = FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("https://github.com/reisanar/figs/raw/master/cement_plot.png")
+```
+
+
+```{r}
+library(tidyverse)
+
+
+# Plotting the distributions
+ggplot(concrete, aes(x = Cement, y = `Concrete_compressive_strength`, color = Age)) +
+  geom_point(size = 3, alpha = 0.4) +
+  labs(x = "Cement", y = "Concrete compressive strength (MPa)", color = "Age (days)") +
+  scale_size_discrete(range = c(3, 6))
+
+```
+
+we can gather the following insights from the resulting scatterplot:
+
+- Cement vs. Concrete Compressive Strength: The x-axis represents the amount of cement (in kg/m^3) used in the concrete mixture, and the y-axis represents the concrete compressive strength (in MPa). The scatterplot shows the relationship between these two variables.
+
+- Age vs. Color: The color aesthetic represents the variable "Age" (in days). Different colors are used to differentiate data points corresponding to different ages. The color gradient provides a visual representation of how the concrete compressive strength varies with different ages.
+
+- Data Distribution: The scatterplot displays individual data points as dots. Each dot represents a specific observation in the dataset. The size of the points is set to a constant size of 3.
+
+- Transparency: The alpha parameter is set to 0.4, making the points slightly transparent. This helps to visualize overlapping points and the density of observations in different regions of the scatterplot.
+
+By examining the scatterplot, we can visually assess the relationship between cement, concrete compressive strength, and age. We can observe trends, patterns, clusters, or outliers that provide insights into how these variables interact and affect concrete strength.
+
+
+
+
+
+
