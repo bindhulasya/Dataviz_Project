@@ -38,7 +38,7 @@ In this project, I explored ... _[Using the dataset obtained from FSU's [Florida
 **Sample data visualization:** 
 
 _[The density distribution of maximum temperatures across the months of the year 2022]_
-<img src="C:/github/dataviz_final_project/figures/unnamed-chunk-10-1.png">
+<img src=unnamed-chunk-10-1.png>
 
 
 ### Moving Forward
