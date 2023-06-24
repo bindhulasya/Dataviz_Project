@@ -25,7 +25,7 @@ In this project, I explored ... _[To analyze the "Grocery Stores" dataset obtain
 **Sample data visualization:** 
 
 _[Relationship between Squarefeet and Company]_
-<img src="C:/github/dataviz_final_project/figures/unnamed-chunk-14-1.png">
+<img src=unnamed-chunk-14-1.png>
 
 - The _Motivation_ behind the linear model explored is to understand the relationship between the "SquareFeet" variable and the "Company" variable in the dataset. The code calculates the total square feet for each company, selects the top 30 companies with the highest total square feet, and then fits a linear regression model to examine how the square footage varies across different companies.
 
