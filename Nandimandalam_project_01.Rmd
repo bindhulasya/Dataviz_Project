@@ -1,0 +1,204 @@
+---
+title: "Mini-Project 01"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+# Data Visualization Project 01
+
+_revised version of mini-project 01 goes here_
+
+
+For this mini project **"Analysis on Motor Vehicle Collisions in Newyork"** , the dataset chosen from the "Motor vehicle collisions - vehicles" taken from U.S. Government’s open data
+
+# **Introduction**
+
+The "Motor Vehicle Collisions in Newyork" dataset is a comprehensive collection of data related to motor vehicle collisions involving various types of vehicles. This dataset provides valuable insights into the characteristics and outcomes of motor vehicle accidents, offering a foundation for analysis in the field of transportation safety.
+
+# Loading Required libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(viridis)
+library(treemapify)
+
+```
+
+# Importing data
+
+```{r}
+collisions <- read_csv("C:/github/dataviz_final_project/data/Motor_Vehicle_Collisions_-_Vehicles.csv")
+collisions
+```
+
+
+
+# **Data Description**
+
+The dataset encompasses a wide range of information about vehicles involved in motor vehicle collisions, with a focus on the United States. It offers a rich and diverse collection of data points that enable to delve into the intricacies of motor vehicle accidents and derive meaningful conclusions.It is regularly updated, ensuring access to the most recent and relevant information.
+
+
+
+```{r}
+summary(collisions)
+```
+
+
+
+
+# Structure of the data
+
+```{r}
+str(collisions)
+```
+
+
+# Motor vehicle collisions rate by Month and Year
+
+```{r}
+monthly_collisions <- collisions %>%
+  mutate(Date = as.Date(CRASH_DATE, format = "%m/%d/%Y")) %>%
+  group_by(Year = format(Date, "%Y"), Month = format(Date, "%b")) %>%
+  summarise(NumCollisions = n()) %>%
+  arrange(Year, match(Month, month.abb))
+monthly_collisions
+```
+
+
+```{r}
+
+ggplot(monthly_collisions, aes(x = Month, y = NumCollisions, fill = Year)) +
+  geom_col(position = "dodge") +
+  theme_minimal() +
+  labs(x = "Month", y = "Number of Collisions", fill = "Year") +
+  scale_fill_viridis_d(option = "A", begin = 0.2, end = 0.8) +
+  theme(legend.position = "bottom")
+
+```
+
+
+Here, it groups the data by year and month, counting the number of collisions in each month. The resulting data is then plotted using ggplot, showing the number of collisions per month, with each year represented by a different color. The color scheme used is viridis, and the legend is positioned at the bottom of the plot
+
+
+What were the original charts you planned to create for this visualization?
+
+The original charts planned for this project were bar charts showing the number of motor vehicle collisions by month and year. The x-axis represented the months, the y-axis represented the number of collisions, and the bars were grouped by year.
+
+What story could you tell with your plot?
+
+With these plots,I can tell about the variation in motor vehicle collision rates over time. By observing the bars' heights for each month, we can identify patterns and trends in collision rates across different years. Highlighting months with higher or lower collision rates and compare them across multiple years. This could lead to insights such as identifying seasonal patterns or determining if collision rates have been increasing or decreasing over time.
+
+How did you apply the principles of data visualizations and design for this visualization?
+
+To apply the principles of data visualizations and design,The `geom_col()` function is used to create the bar charts, with the position = "dodge" argument to group the bars by year. The `scale_fill_viridis_d()` function is used to choose a color palette for the bars, and the `theme_minimal()` function is applied to create a clean and minimalistic design.And also includes appropriate labeling of the axes and legend using the `labs()` function. The `theme()` function is used to customize the legend's position and ensure a coherent design. Overall, here follows the principles of data visualization by using appropriate visual encodings (bars for quantitative data), providing clear labels and titles, and employing a visually pleasing color scheme.
+
+# Collisions by time of day
+
+I have examined the collisions by time of day
+
+```{r}
+collision_times <- collisions %>%
+  group_by(CRASH_TIME) %>%
+  summarise(NumCollisions = n()) %>%
+  arrange(desc(NumCollisions))
+collision_times
+```
+
+
+```{r}
+# Create a scatterplot
+ggplot(collision_times, aes(x = CRASH_TIME, y = NumCollisions, color = NumCollisions)) +
+  geom_point() +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(x = "Crash Time", y = "Number of Collisions") +
+  theme_minimal()
+```
+
+The resulting plot allows for a visual analysis of the distribution of collisions throughout the crash times, helping identify any patterns or trends in the data.
+
+
+What were the original charts you planned to create for this assignments?
+
+The original charts planned to be created for this assignment is a scatter plot showing the number of collisions (NumCollisions) on the y-axis and the crash times (CRASH_TIME) on the x-axis. Each point on the plot would represent a specific crash time, and the color of the points would be based on the number of collisions at that time.The purpose of this chart is to visualize the distribution of collisions across different crash times and identify any patterns or trends in the data.
+
+What story could you tell with your plots?
+
+The story that could be told with these plots is the scatter plot can provide insights into the frequency of collisions at different crash times. By examining the distribution of points, we can identify if certain times of the day or specific periods have a higher number of collisions. This information can be useful for understanding when and where accidents are more likely to occur, allowing for targeted interventions and improved road safety measures.
+
+How did you apply the principles of data visualizations and design for this assignment?
+
+The principles of data visualization and design applied in this assignment include:
+
+1.Choosing an appropriate visualization: The scatter plot is suitable for showing the relationship between two continuous variables (crash time and number of collisions). It allows for the identification of patterns or clusters in the data.
+
+2.Color mapping: The color of the points in the scatter plot is mapped to the number of collisions at each crash time. The use of a color gradient from blue to red helps to visually represent the varying intensities of collisions, with blue indicating fewer collisions and red indicating a higher number of collisions.
+
+3.Axis labeling and title: The x-axis is labeled as "Crash Time" and the y-axis as "Number of Collisions." This provides clear information about the variables being represented in the plot. The title of the plot can further enhance understanding by summarizing the main purpose of the visualization.
+
+4.Minimalist theme: The plot is styled with a minimalistic theme using `theme_minimal()`. This ensures that the focus remains on the data and reduces any distractions or unnecessary visual elements.
+
+
+# Distribution of collisions by Vehicle type
+
+```{r}
+top_collisions <- collisions %>%
+  group_by(VEHICLE_TYPE) %>%
+  summarise(NumCollisions = n()) %>%
+  arrange(desc(NumCollisions)) %>%
+  top_n(10)
+top_collisions
+```
+
+
+```{r}
+library(treemap)
+
+# Combine similar vehicle types
+collisions$VEHICLE_TYPE <- ifelse(grepl("TAXI", collisions$VEHICLE_TYPE, ignore.case = TRUE), "TAXI", collisions$VEHICLE_TYPE)
+
+# Group and summarize collisions by vehicle type
+top_collisions <- collisions %>%
+  group_by(VEHICLE_TYPE) %>%
+  summarise(NumCollisions = n()) %>%
+  arrange(desc(NumCollisions)) %>%
+  top_n(10)
+
+# Create treemap
+treemap(top_collisions, index = "VEHICLE_TYPE", vSize = "NumCollisions",
+        title = "Vehicle Types in Collisions")
+
+
+```
+
+
+What were the original charts you planned to create for this assignments?
+
+The original plan was to create a treemap to visualize the distribution of collisions by vehicle type.
+
+What story could you tell with your plots?
+
+With the treemap visualization, we can tell a story about the relative frequency of different vehicle types involved in collisions. The treemap displays the vehicle types as rectangles, where the size of each rectangle represents the number of collisions associated with that vehicle type. By examining the treemap, we can quickly identify the vehicle types that are most commonly involved in collisions.
+
+How did you apply the principles of data visualizations and design for this assignment?
+
+To apply the principles of data visualizations and design, it's important to consider the following:
+
+- Choosing appropriate chart types: The treemap is suitable for displaying the distribution of collisions by vehicle type, as they effectively represent categorical data and allow for comparisons.
+
+- Clear labeling: Ensure that the axes and labels in the chart are properly labeled, making it easy for the audience to understand the information being presented.
+
+- Color choices: Select colors that are visually appealing and facilitate easy differentiation between categories or vehicle types. Use a consistent color scheme throughout the visualizations.
+
+- Layout and presentation: Arrange the charts in a visually pleasing and logical manner. Add titles, captions, or annotations to provide context and guide the audience through the story being told.
+
+- Data integrity: Verify that the data used for the visualizations is accurate and reliable. Any data manipulation or grouping should be performed appropriately to ensure the visualizations accurately represent the underlying information.
+
+By applying these principles, the visualizations would effectively communicate the distribution of collisions by vehicle type, enabling the audience to grasp the main insights and trends at a glance
+
+
+
+
