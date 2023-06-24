@@ -1,0 +1,280 @@
+---
+title: "Mini-Project 02"
+output: 
+  html_document:
+    keep_md: true
+    toc: true
+    toc_float: true
+---
+
+# Data Visualization Project 02
+
+_revised version of mini-project 02 goes here_
+
+For this Mini Project **Analysis on Grocery stores in Detroit** i have choosen dataset from _"Grocery stores"_ datset in U.S.Government’s open data
+
+## **Introduction**
+
+For this project,I will be analyzing the “Grocery Stores” dataset.The dataset contains information on Stores located in the detroit city.The data available via the Data Driven Open Data portal.I intend to investigate patterns and trends in this data, such as the types of Grocery Stores,their locations.
+
+## **Preparation**
+
+## Loading Necessary Libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(leaflet)
+library(plotly)
+library(sf)
+```
+
+
+
+
+## Importing Data
+
+```{r}
+Grocery_stores <- read_csv("C:/github/dataviz_final_project/data/Grocery.csv")
+Grocery_stores
+
+```
+
+## **Data Description**
+
+The dataset provides information about various grocery stores.The resulting data frame is stored in the variable "Grocery_stores".The dataset likely contains several columns representing different attributes of the grocery stores. These attributes may include details such as the store name, location, address, contact information, store size, product categories available, and other relevant information.
+
+
+```{r}
+summary(Grocery_stores)
+```
+
+
+
+```{r}
+str(Grocery_stores)
+```
+
+## Number of Stores by Company
+
+```{r}
+# Summarize the data
+store_summary <- Grocery_stores %>%
+  group_by(Company) %>%
+  summarize(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  top_n(10)
+store_summary
+```
+
+
+```{r}
+# Sort the data by count in descending order
+store_summary <- store_summary %>% arrange(desc(Count))
+```
+
+
+```{r}
+# Create an interactive bar plot
+plot_ly(data = store_summary, x = ~Count, y = ~Company, type = "bar", orientation = "h") %>%
+  layout(
+    title = "Number of Stores by Company",
+    xaxis = list(title = "Count"),
+    yaxis = list(title = "Company"),
+    plot_bgcolor = "#f2f2f2",
+    paper_bgcolor = "#f2f2f2",
+    font = list(color = "black")
+  )
+```
+
+
+This plot is an effective tool for presenting and analyzing the distribution of stores across different companies, enabling easy identification of companies with the highest and lowest store counts.
+
+- What were the original charts you planned to create for this assignments? What steps were necessary for cleaning and preparing the data?
+
+The original plan was to create a bar chart showing the number of stores for each company in the dataset. The code performs the necessary steps for cleaning and preparing the data. It groups the data by the company and calculates the count of stores for each company.
+
+- What story could you tell with your plots? What difficulties did you encounter while creating the visualizations? What additional approaches do you think can be use to explore the data you selected?
+
+The plot_ly() function from the Plotly library was employed. The data used was the summarized store information, with the count of stores represented on the x-axis and the company names on the y-axis. A horizontal bar plot was chosen for its effectiveness in comparing the store counts across different companies.The layout() function was used to customize the appearance of the plot. The title "Number of Stores by Company" was assigned to provide a clear understanding of the plot's purpose. The x-axis and y-axis were labeled as "Count" and "Company," respectively, to provide context for the variables being represented. The plot's background color, as well as the font color, were adjusted to ensure readability.
+
+The resulting visualization enables viewers to quickly grasp the distribution of stores among the top companies. By observing the bar lengths, it becomes evident which companies have a larger number of stores compared to others. This allows for comparisons and identification of major players in the grocery store industry.
+To further explore the data, additional approaches could be employed. For instance, one could create a map visualization to show the geographic distribution of these grocery stores. This would provide insights into the regional dominance of different companies. Additionally, a time series analysis could be conducted to observe the growth or decline of stores over a specific period.
+
+- How did you apply the principles of data visualizations and design for this assignment?
+
+Application of data visualization principles and design to create an effective and visually appealing plot. Some of the principles applied include are:
+
+- Simplified and clear representation: The plot uses a simple horizontal bar chart to represent the data accurately. The use of a single chart type makes it easy for viewers to understand the comparison between companies.
+
+- Effective use of color and layout: The plot uses a light gray background and black font color to ensure readability. The bar chart employs a consistent color scheme, avoiding excessive use of colors that could distract or confuse viewers.
+
+- Clear labeling and titles: The plot includes clear labels for the x-axis and y-axis, providing context for the data being presented. The title of the plot clearly indicates the purpose of the visualization, which is to show the number of stores by company.
+
+## Grocery Stores by Location
+
+```{r}
+# Summarize the data by location
+location <- Grocery_stores %>%
+  drop_na(Better_Lat, Better_Long) %>%
+  group_by(Better_Lat, Better_Long) %>%
+  summarize(Count = n())
+location
+```
+
+
+```{r}
+# Read the shapefile
+shapefile_path <- "C:/github/dataviz_final_project/data/Grocery_Stores-shp"
+shapefile <- st_read(shapefile_path)
+shapefile
+```
+
+```{r}
+detroit_map <- leaflet() %>%
+  setView(lng = -83.05, lat = 42.33, zoom = 10) %>%
+  addProviderTiles("CartoDB.Positron")  # Choose your desired tile provider
+
+# Add the shapefile as markers
+detroit_map <- detroit_map %>%
+  addCircleMarkers(
+    data = shapefile,
+    lng = ~Better_Lon,
+    lat = ~Better_Lat,
+    fillColor = "red",  # Customize the fill color
+    fillOpacity = 0.6,  # Customize the fill opacity
+    radius = 4  # Customize the marker radius
+  )
+
+# Display the map
+detroit_map
+
+
+```
+
+
+
+The map provides a visual representation of the shapefile data on the Detroit area. The red markers highlight specific locations based on their corresponding longitude and latitude values. This map can be used to identify and analyze patterns or spatial distributions within the dataset. It serves as a useful tool for exploring and visualizing geographic information related to Detroit.
+
+- What were the original charts you planned to create for this assignments? What steps were necessary for cleaning and preparing the data?
+
+Original plan was to create a map visualization showing the distribution of grocery stores in Detroit. To accomplish this, the data has to be cleaned and prepared.Removed missing values in the latitude and longitude variables and grouped the data by these coordinates.Then calculated the count of grocery stores at each location, resulting in the 'location' dataset.
+
+- What story could you tell with your plots? What difficulties did you encounter while creating the visualizations? What additional approaches do you think can be use to explore the data you selected?
+
+The story that can be told with these plots revolves around the spatial distribution of grocery stores in Detroit. By visualizing the locations of grocery stores on a map, we can identify areas with higher concentrations of stores as well as areas with limited access to fresh food. This information could be valuable for understanding food deserts and areas that may require additional attention to improve food accessibility for residents.
+
+One potential difficulty encountered during the visualization process could be related to data quality. It is important to ensure that the latitude and longitude values are accurate and properly aligned with the corresponding locations on the map. Outliers or incorrect data entries could lead to misleading visualizations. Therefore, data validation and verification steps should be performed to minimize such issues.
+
+Additional Approaches for Data Exploration:
+There are additional approaches that can be employed to further explore the selected data.
+
+a) Heatmap: Instead of individual markers, we can use a heatmap representation to visualize the density of grocery stores across different areas of Detroit. This would provide a more continuous representation of store distribution.
+
+ b) Clustering Analysis: Utilizing clustering algorithms such as K-means or DBSCAN could help identify distinct clusters of grocery stores. This approach can uncover patterns and spatial groupings that may not be immediately apparent in the raw data.
+
+- How did you apply the principles of data visualizations and design for this assignment?
+
+we applied several principles of data visualization and design to create meaningful and informative plots:
+
+ a) Visual Encoding: We used visual encodings such as color, opacity, and marker size to represent the grocery store locations effectively. The use of red markers with varying opacity and size allowed for easy differentiation and emphasized the presence of stores in specific areas.
+
+ b) Interactive Elements: The map visualization created using the leaflet package allowed for interactive exploration by users. Users can zoom in and out, pan across the map, and click on markers for additional information. This interactivity enhances user engagement and promotes a deeper understanding of the data.
+
+ c) Simplification and Focus: By focusing on the geographic representation of grocery store locations, we simplified the visual display to convey the main message clearly. Unnecessary elements were removed, ensuring the viewer's attention is directed towards the key insights.
+
+ d) Consistency and Readability: The choice of color (red) for the markers was consistent with the common association of red as a symbol of locations or points of interest. The marker size and opacity were carefully adjusted to ensure readability without overwhelming the map.
+
+
+
+## Relationship between SquareFeet and Company
+
+```{r}
+filtered_data <- Grocery_stores %>%
+  group_by(Company) %>%
+  summarize(Total_SquareFeet = sum(SquareFeet)) %>%
+  top_n(30, Total_SquareFeet) %>%
+  inner_join(Grocery_stores, by = "Company")
+
+filtered_data
+```
+
+
+```{r}
+
+# Fit a linear regression model
+model <- lm(SquareFeet ~ Company, data = filtered_data)
+```
+
+
+```{r}
+# Extract the coefficients from the model
+coefficients <- coef(model)
+```
+
+
+```{r}
+# Create a plot of the linear model and its associated coefficients
+plot_model <- ggplot(filtered_data, aes(x = Company, y = SquareFeet)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Linear Model: Square Feet by Company", x = "Company", y = "Square Feet") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  coord_flip()
+
+
+plot_coefficients <- ggplot(filtered_data, aes(x = Company, y = coefficients[2] + coefficients[1] * seq_along(Company))) +
+  geom_point(color = "red") +
+  geom_abline(intercept = coefficients[2], slope = coefficients[1], color = "blue") +
+  labs(title = "Coefficients Plot: Square Feet by Company", x = "Company", y = "Square Feet") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+coord_flip()
+
+
+# Display both plots side by side
+library(gridExtra)
+grid.arrange(plot_model, plot_coefficients, ncol = 2)
+
+```
+
+The first plot, titled "Linear Model: Square Feet by Company," shows the data points as individual blue dots and a blue line representing the linear regression fit to the data. The line represents the estimated relationship between the company and the square footage. If the line has a positive slope, it indicates that as the company changes, the square footage tends to increase. Conversely, a negative slope suggests a decrease in square footage with a change in the company.
+
+The second plot, titled "Coefficients Plot: Square Feet by Company," displays the coefficients of the linear model. Each red point represents a company's coefficient value, while the blue line represents the linear relationship between the company and square footage. The intercept value (y-axis value when x = 0) is given by the coefficient[2], and the slope (change in y for a unit change in x) is represented by coefficient[1]. The red points indicate how the coefficients vary across different companies.
+
+By examining these plots, one can determine the strength and direction of the relationship between the company and square footage. Additionally, the coefficients plot provides insights into the specific impact of each company on the square footage.Overall, these plots help visualize the linear model's fit to the data and provide a graphical representation of the coefficients' values, allowing for a better understanding of the relationship between the company and square footage in the given dataset.
+
+
+- What were the original charts you planned to create for this assignments? What steps were necessary for cleaning and preparing the data?
+
+The original charts I planned to create for this assignment were a scatter plot with a linear regression line showing the relationship between the "SquareFeet" variable and the "Company" variable. Additionally, I wanted to create a plot to visualize the coefficients of the linear model.To prepare the data for the visualization, I assumed that the data was already loaded into a data frame called "filtered_data." The necessary steps for cleaning and preparing the data would include importing the data into R, handling missing values, removing outliers if necessary, and ensuring that the variables of interest are in the correct format for analysis.
+
+In the first plot, I used ggplot to create a scatter plot of the "SquareFeet" variable against the "Company" variable. I added a smooth line using the method "lm" to fit a linear regression model to the data. This plot allows us to visualize the overall trend between the two variables and see if there is a linear relationship.
+In the second plot, I created a coefficients plot to show the estimated coefficients of the linear model. I used the coefficients from the linear regression model to calculate the predicted values for the "SquareFeet" variable based on the "Company" variable. I plotted these predicted values against the "Company" variable and added a line representing the linear relationship described by the coefficients.
+
+- What story could you tell with your plots? What difficulties did you encounter while creating the visualizations? What additional approaches do you think can be use to explore the data you selected?
+
+The story I could tell with these plots is the relationship between the "SquareFeet" and "Company" variables. The scatter plot with the linear regression line helps us understand the overall trend and direction of the relationship. It shows if there is a positive or negative association between the variables and how strong the relationship is.
+
+The coefficients plot provides insight into the specific impact of the "Company" variable on the "SquareFeet" variable. It shows the estimated slope (coefficient) of the linear relationship and the intercept. This plot allows us to compare the effect of different companies on the square footage.
+
+One difficulty I encountered while creating the visualizations was ensuring that the data was in the correct format for plotting. I assumed that the data was already cleaned and prepared, but in a real-world scenario, data cleaning and preprocessing steps would be necessary to handle missing values, outliers, and ensure data integrity.
+
+In terms of additional approaches to explore the data, we could consider adding confidence intervals to the linear regression line in the scatter plot. This would provide a measure of uncertainty around the estimated line and give a sense of the variability in the relationship.
+
+- How did you apply the principles of data visualizations and design for this assignment?
+
+To apply the principles of data visualization and design, I used the ggplot library in R to create the plots. I ensured that the plots had clear titles, axis labels, and a consistent theme. I also adjusted the angle and justification of the x-axis labels to improve readability. By using different colors for the data points, regression line, and coefficients, I made it easier to distinguish between the elements of the plots.
+
+Overall, the visualizations provided a clear and concise representation of the relationship between the "SquareFeet" and "Company" variables, allowing for easy interpretation and analysis.
+
+
+- The _Motivation_ behind the linear model explored in the code is to understand the relationship between the "SquareFeet" variable and the "Company" variable in the dataset. The code calculates the total square feet for each company, selects the top 30 companies with the highest total square feet, and then fits a linear regression model to examine how the square footage varies across different companies.
+
+- Linear regression is a commonly used statistical technique to model the relationship between a dependent variable and one or more independent variables. In this case, the dependent variable is "SquareFeet," and the independent variable of interest is "Company."
+
+- As for the attributes that would be appropriate when trying to predict the values of "SquareFeet," it depends on the specific problem and context. In the given code, only the "Company" variable is considered as the independent variable. However, there may be other attributes or variables in the dataset that could potentially influence the square footage of a grocery store, such as location, store type, demographics, or other factors related to the company or market. 
+
+
+
